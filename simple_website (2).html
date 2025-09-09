@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ubuntu Server with PostgreSQL</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐘</text></svg>">
+    <style>
+        :root {
+            --primary: #336791;
+            --secondary: #764ba2;
+            --accent: #ff6b6b;
+            --postgres: #336791;
+            --text-light: rgba(255, 255, 255, 0.9);
+            --text-dim: rgba(255, 255, 255, 0.7);
+            --glass: rgba(255, 255, 255, 0.1);
+            --shadow: rgba(31, 38, 135, 0.37);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, var(--postgres) 0%, var(--secondary) 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Navigation */
+        .nav {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 1rem 2rem;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 8px 32px var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        .nav-brand {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-light);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+        }
+
+        .nav-links a:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 3rem 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .hero h1 {
+            color: white;
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .hero .subtitle {
+            color: var(--text-light);
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Database Status Panel */
+        .db-status {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        .db-header {
+            display: flex;
+            align-items: center;
+            justify-content: between;
+            margin-bottom: 2rem;
+        }
+
+        .db-header h2 {
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .db-connection-status {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-left: auto;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #2ecc71;
+            animation: pulse 2s infinite;
+        }
+
+        .status-text {
+            color: var(--text-light);
+            font-weight: 500;
+        }
+
+        .db-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .db-stat {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .db-stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 0.5rem;
+        }
+
+        .db-stat-label {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
+
+        /* Data Management Section */
+        .data-management {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .data-panel {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        .data-panel h3 {
+            color: white;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            color: var(--text-light);
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 0 2px rgba(255, 107, 107, 0.2);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(45deg, var(--accent), #ee5a24);
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            box-shadow: 0 4px 15px rgba(238, 90, 36, 0.4);
+        }
+
+        .btn:hover {
+            background: linear-gradient(45deg, #ee5a24, var(--accent));
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(238, 90, 36, 0.6);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, var(--postgres), #4a90a4);
+        }
+
+        .btn-secondary:hover {
+            background: linear-gradient(45deg, #4a90a4, var(--postgres));
+        }
+
+        /* Data Table */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .data-table th {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .data-table td {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .data-table tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Query Panel */
+        .query-panel {
+            grid-column: 1 / -1;
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        .query-textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            resize: vertical;
+        }
+
+        .query-textarea::placeholder {
+            color: rgba(0, 255, 0, 0.5);
+        }
+
+        .query-results {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            min-height: 100px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            color: #00ff00;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+
+        /* Analytics Dashboard */
+        .analytics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-container {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            height: 300px;
+        }
+
+        .chart-title {
+            color: white;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        /* Notifications */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(46, 213, 115, 0.9);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.error {
+            background: rgba(231, 76, 60, 0.9);
+        }
+
+        /* Loading States */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .data-management {
+                grid-template-columns: 1fr;
+            }
+            
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .db-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Navigation -->
+        <nav class="nav">
+            <div class="nav-brand">
+                🐘 Ubuntu + PostgreSQL
+            </div>
+            <ul class="nav-links">
+                <li><a href="#database">Database</a></li>
+                <li><a href="#analytics">Analytics</a></li>
+                <li><a href="#query">Query</a></li>
+                <li><a href="#monitoring">Monitoring</a></li>
+            </ul>
+        </nav>
+
+        <!-- Hero Section -->
+        <section class="hero">
+            <h1>Advanced Database Server</h1>
+            <p class="subtitle">Ubuntu Server with PostgreSQL Integration & Real-time Analytics</p>
+        </section>
+
+        <!-- Database Status -->
+        <section class="db-status" id="database">
+            <div class="db-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h2>🗄️ Database Status</h2>
+                <div class="db-connection-status">
+                    <div class="status-dot" id="db-status-dot"></div>
+                    <span class="status-text" id="db-status-text">Connected</span>
+                </div>
+            </div>
+
+            <div class="db-stats">
+                <div class="db-stat">
+                    <div class="db-stat-value" id="total-connections">25</div>
+                    <div class="db-stat-label">Active Connections</div>
+                </div>
+                <div class="db-stat">
+                    <div class="db-stat-value" id="total-queries">1,847</div>
+                    <div class="db-stat-label">Queries Today</div>
+                </div>
+                <div class="db-stat">
+                    <div class="db-stat-value" id="db-size">2.3 GB</div>
+                    <div class="db-stat-label">Database Size</div>
+                </div>
+                <div class="db-stat">
+                    <div class="db-stat-value" id="avg-query-time">12ms</div>
+                    <div class="db-stat-label">Avg Query Time</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Data Management -->
+        <section class="data-management">
+            <!-- User Management -->
+            <div class="data-panel">
+                <h3>👥 User Management</h3>
+                <form id="user-form">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" class="form-control" placeholder="Enter username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" class="form-control" placeholder="Enter email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="role">Role</label>
+                        <select id="role" class="form-control" required>
+                            <option value="">Select role</option>
+                            <option value="admin">Admin</option>
+                            <option value="user">User</option>
+                            <option value="viewer">Viewer</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn">➕ Add User</button>
+                    <button type="button" class="btn btn-secondary" onclick="loadUsers()">🔄 Refresh</button>
+                </form>
+            </div>
+
+            <!-- Recent Users -->
+            <div class="data-panel">
+                <h3>📊 Recent Users</h3>
+                <div style="max-height: 300px; overflow-y: auto;">
+                    <table class="data-table" id="users-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Created</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-tbody">
+                            <tr>
+                                <td colspan="5" style="text-align: center; color: var(--text-dim);">Loading users...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- SQL Query Panel -->
+        <section class="query-panel" id="query">
+            <h2 style="color: white; margin-bottom: 1.5rem;">🔍 SQL Query Console</h2>
+            <div class="form-group">
+                <label for="sql-query">SQL Query</label>
+                <textarea id="sql-query" class="query-textarea" placeholder="SELECT * FROM users WHERE created_at > NOW() - INTERVAL '7 days' ORDER BY created_at DESC LIMIT 10;
+
+-- Try these sample queries:
+-- SELECT COUNT(*) as total_users FROM users;
+-- SELECT role, COUNT(*) as count FROM users GROUP BY role;
+-- SELECT * FROM system_logs ORDER BY timestamp DESC LIMIT 5;"></textarea>
+            </div>
+            <button onclick="executeQuery()" class="btn">▶️ Execute Query</button>
+            <button onclick="clearResults()" class="btn btn-secondary">🗑️ Clear Results</button>
+            
+            <div class="query-results" id="query-results">
+Ready to execute SQL queries...
+
+Database: ubuntu_server_db
+Tables: users, system_logs, server_metrics, sessions
+            </div>
+        </section>
+
+        <!-- Analytics Dashboard -->
+        <section class="analytics" id="analytics">
+            <div class="chart-container">
+                <div class="chart-title">📈 Daily User Registrations</div>
+                <canvas id="registrations-chart" width="400" height="200"></canvas>
+            </div>
+            <div class="chart-container">
+                <div class="chart-title">🔥 Database Activity</div>
+                <canvas id="activity-chart" width="400" height="200"></canvas>
+            </div>
+            <div class="chart-container">
+                <div class="chart-title">⚡ Query Performance</div>
+                <canvas id="performance-chart" width="400" height="200"></canvas>
+            </div>
+        </section>
+
+        <!-- Monitoring Section -->
+        <section class="data-panel" id="monitoring" style="margin-bottom: 2rem;">
+            <h3>📊 Real-time Monitoring</h3>
+            <div class="db-stats">
+                <div class="db-stat">
+                    <div class="db-stat-value" id="cpu-postgres">15%</div>
+                    <div class="db-stat-label">PostgreSQL CPU</div>
+                </div>
+                <div class="db-stat">
+                    <div class="db-stat-value" id="memory-postgres">456 MB</div>
+                    <div class="db-stat-label">Memory Usage</div>
+                </div>
+                <div class="db-stat">
+                    <div class="db-stat-value" id="disk-io">23 MB/s</div>
+                    <div class="db-stat-label">Disk I/O</div>
+                </div>
+                <div class="db-stat">
+                    <div class="db-stat-value" id="cache-hit">94.7%</div>
+                    <div class="db-stat-label">Cache Hit Ratio</div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Notification Container -->
+    <div class="notification" id="notification"></div>
+
+    <script>
+        // Simulated database connection and data
+        let simulatedUsers = [
+            {id: 1, username: 'admin', email: 'admin@ubuntu-server.local', role: 'admin', created_at: '2025-01-11T10:30:00Z'},
+            {id: 2, username: 'john_doe', email: 'john@example.com', role: 'user', created_at: '2025-01-11T11:45:00Z'},
+            {id: 3, username: 'jane_smith', email: 'jane@example.com', role: 'user', created_at: '2025-01-11T12:15:00Z'},
+            {id: 4, username: 'monitor', email: 'monitor@ubuntu-server.local', role: 'viewer', created_at: '2025-01-11T13:20:00Z'},
+        ];
+
+        let queryHistory = [];
+        let dbMetrics = {
+            connections: 25,
+            queries: 1847,
+            avgQueryTime: 12
+        };
+
+        // Initialize application
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUsers();
+            startMonitoring();
+            initializeCharts();
+            simulateRealtimeData();
+        });
+
+        // Database connection simulation
+        function checkDatabaseConnection() {
+            // Simulate connection check
+            const isConnected = Math.random() > 0.1; // 90% uptime simulation
+            
+            const statusDot = document.getElementById('db-status-dot');
+            const statusText = document.getElementById('db-status-text');
+            
+            if (isConnected) {
+                statusDot.style.background = '#2ecc71';
+                statusText.textContent = 'Connected';
+                statusText.style.color = 'var(--text-light)';
+            } else {
+                statusDot.style.background = '#e74c3c';
+                statusText.textContent = 'Connection Error';
+                statusText.style.color = '#e74c3c';
+            }
+            
+            return isConnected;
+        }
+
+        // Load users from simulated database
+        function loadUsers() {
+            const tbody = document.getElementById('users-tbody');
+            
+            tbody.innerHTML = simulatedUsers.map(user => `
+                <tr>
+                    <td>${user.id}</td>
+                    <td>${user.username}</td>
+                    <td>${user.email}</td>
+                    <td><span style="color: ${getRoleColor(user.role)}">${user.role}</span></td>
+                    <td>${new Date(user.created_at).toLocaleDateString()}</td>
+                </tr>
+            `).join('');
+        }
+
+        function getRoleColor(role) {
+            const colors = {
+                'admin': '#e74c3c',
+                'user': '#3498db',
+                'viewer': '#95a5a6'
+            };
+            return colors[role] || '#95a5a6';
+        }
+
+        // User form submission
+        document.getElementById('user-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
+            const role = document.getElementById('role').value;
+            
+            // Simulate adding user to database
+            const newUser = {
+                id: simulatedUsers.length + 1,
+                username,
+                email,
+                role,
+                created_at: new Date().toISOString()
+            };
+            
+            simulatedUsers.unshift(newUser);
+            loadUsers();
+            
+            // Clear form
+            this.reset();
+            
+            // Show success notification
+            showNotification(`User "${username}" added successfully!`, 'success');
+            
+            // Update metrics
+            updateDatabaseMetrics();
+        });
+
+        // SQL Query execution
+        function executeQuery() {
+            const queryInput = document.getElementById('sql-query');
+            const resultsDiv = document.getElementById('query-results');
+            const query = queryInput.value.trim();
+            
+            if (!query) {
+                showNotification('Please enter a SQL query', 'error');
+                return;
+            }
+            
+            // Show loading
+            resultsDiv.innerHTML = 'Executing query... <div class="loading"></div>';
+            
+            setTimeout(() => {
+                const result = processQuery(query);
+                resultsDiv.innerHTML = result;
+                queryHistory.unshift({
+                    query: query.substring(0, 100) + (query.length > 100 ? '...' : ''),
+                    timestamp: new Date().toLocaleString(),
+                    result: result.split('\n').length + ' rows affected'
+                });
+                
+                updateDatabaseMetrics();
+                showNotification('Query executed successfully!', 'success');
+            }, 1000 + Math.random() * 2000); // Simulate query time
+        }
+
+        // Process SQL queries (simulation)
+        function processQuery(query) {
+            const lowerQuery = query.toLowerCase();
+            
+            if (lowerQuery.includes('select * from users')) {
+                return simulatedUsers.map(user => 
+                    `${user.id} | ${user.username} | ${user.email} | ${user.role} | ${user.created_at}`
+                ).join('\n') + `\n\n(${simulatedUsers.length} rows returned)`;
+            }
+            
+            if (lowerQuery.includes('count(*)') && lowerQuery.includes('users')) {
+                return `total_users\n-----------\n${simulatedUsers.length}\n\n(1 row returned)`;
+            }
+            
+            if (lowerQuery.includes('group by role')) {
+                const roleCounts = simulatedUsers.reduce((acc, user) => {
+                    acc[user.role] = (acc[user.role] || 0) + 1;
+                    return acc;
+                }, {});
+                
+                return Object.entries(roleCounts)
+                    .map(([role, count]) => `${role} | ${count}`)
+                    .join('\n') + `\n\n(${Object.keys(roleCounts).length} rows returned)`;
+            }
+            
+            if (lowerQuery.includes('system_logs')) {
+                return `timestamp | level | message
+2025-01-11 14:30:22 | INFO | Database connection established
+2025-01-11 14:28:15 | INFO | User authentication successful
+2025-01-11 14:25:33 | WARN | High connection count detected
+2025-01-11 14:22:45 | INFO | Automated backup completed
+2025-01-11 14:20:10 | INFO | Query optimization applied
+
+(5 rows returned)`;
+            }
+            
+            // Default response for other queries
+            return `Query executed successfully.
+Affected rows: ${Math.floor(Math.random() * 10) + 1}
+Execution time: ${Math.floor(Math.random() * 50) + 5}ms
+
+Note: This is a simulation. In a real environment, 
+this would connect to your actual PostgreSQL database.`;
+        }
+
+        function clearResults() {
+            document.getElementById('query-results').innerHTML = `Ready to execute SQL queries...
+
+Database: ubuntu_server_db
+Tables: users, system_logs, server_metrics, sessions`;
+        }
+
+        // Update database metrics
+        function updateDatabaseMetrics() {
+            dbMetrics.queries++;
+            dbMetrics.avgQueryTime = Math.floor(Math.random() * 20) + 5;
+            
+            document.getElementById('total-queries').textContent = dbMetrics.queries.toLocaleString();
+            document.getElementById('avg-query-time').textContent = dbMetrics.avgQueryTime + 'ms';
+        }
+
+        // Real-time monitoring
+        function startMonitoring() {
+            setInterval(() => {
+                checkDatabaseConnection();
+                updateRealtimeMetrics();
+            }, 5000);
+        }
+
+        function updateRealtimeMetrics() {
+            // Simulate fluctuating metrics
+            const cpuUsage = Math.floor(Math.random() * 30) + 10;
+            const memoryUsage = Math.floor(Math.random() * 200) + 400;
+            const diskIO = Math.floor(Math.random() * 50) + 10;
+            const cacheHit = (Math.random() * 5 + 90).toFixed(1);
+            
+            document.getElementById('cpu-postgres').textContent = cpuUsage + '%';
+            document.getElementById('memory-postgres').textContent = memoryUsage + ' MB';
+            document.getElementById('disk-io').textContent = diskIO + ' MB/s';
+            document.getElementById('cache-hit').textContent = cacheHit + '%';
+            
+            // Update connection count
+            dbMetrics.connections = Math.floor(Math.random() * 20) + 15;
+            document.getElementById('total-connections').textContent = dbMetrics.connections;
+        }
+
+        // Notification system
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Initialize charts (placeholder for future Chart.js integration)
+        function initializeCharts() {
+            // This would integrate with Chart.js for real charts
+            console.log('Charts initialized (placeholder)');
+        }
+
+        // Simulate real-time data
+        function simulateRealtimeData() {
+            setInterval(() => {
+                // Randomly add new users
+                if (Math.random() > 0.95) {
+                    const usernames = ['alex_wilson', 'sarah_jones', 'mike_brown', 'emma_davis', 'chris_miller'];
+                    const domains = ['gmail.com', 'yahoo.com', 'company.com', 'example.org'];
+                    const roles = ['user', 'viewer', 'user', 'user']; // Weighted towards user
+                    
+                    const username = usernames[Math.floor(Math.random() * usernames.length)] + '_' + Math.floor(Math.random() * 1000);
+                    const domain = domains[Math.floor(Math.random() * domains.length)];
+                    const role = roles[Math.floor(Math.random() * roles.length)];
+                    
+                    const newUser = {
+                        id: simulatedUsers.length + 1,
+                        username,
+                        email: `${username}@${domain}`,
+                        role,
+                        created_at: new Date().toISOString()
+                    };
+                    
+                    simulatedUsers.unshift(newUser);
+                    if (simulatedUsers.length > 20) {
+                        simulatedUsers.pop(); // Keep only recent 20 users
+                    }
+                    loadUsers();
+                    showNotification(`New user "${username}" registered`, 'success');
+                }
+            }, 10000); // Check every 10 seconds
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'Enter') {
+                executeQuery();
+            }
+        });
+
+        // Smooth scrolling for navigation
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const target = document.querySelector(link.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+
+    </script>
+
+    <!-- PostgreSQL Setup Instructions -->
+    <div style="position: fixed; bottom: 20px; left: 20px; background: rgba(0,0,0,0.8); color: white; padding: 1rem; border-radius: 10px; font-size: 0.8rem; max-width: 300px; z-index: 1000;">
+        <strong>🐘 PostgreSQL Setup:</strong><br>
+        <code>sudo apt install postgresql</code><br>
+        <code>sudo -u postgres createdb ubuntu_server_db</code><br>
+        <button onclick="this.parentElement.style.display='none'" style="position: absolute; top: 5px; right: 10px; background: none; border: none; color: white; cursor: pointer;">×</button>
+    </div>
+
+</body>
+</html>

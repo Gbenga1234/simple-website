@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Ubuntu Server</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🖥️</text></svg>">
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --accent: #ff6b6b;
+            --text-light: rgba(255, 255, 255, 0.9);
+            --text-dim: rgba(255, 255, 255, 0.7);
+            --glass: rgba(255, 255, 255, 0.1);
+            --shadow: rgba(31, 38, 135, 0.37);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated background particles */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            animation: float 20s infinite linear;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Navigation */
+        .nav {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 1rem 2rem;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 8px 32px var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        .nav-brand {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-light);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+        }
+
+        .nav-links a:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .nav-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 4rem 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .hero h1 {
+            color: white;
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            animation: slideInDown 1s ease-out;
+        }
+
+        .hero .subtitle {
+            color: var(--text-light);
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+            animation: slideInUp 1s ease-out 0.3s both;
+        }
+
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            margin-top: 2rem;
+        }
+
+        .stat {
+            text-align: center;
+            animation: fadeIn 1s ease-out 0.6s both;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: white;
+            display: block;
+        }
+
+        .stat-label {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Advanced Cards Grid */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .card {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .card:hover::before {
+            left: 100%;
+        }
+
+        .card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 40px var(--shadow);
+        }
+
+        .card-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .card h3 {
+            color: white;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        .card p {
+            color: var(--text-dim);
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        /* Interactive Dashboard */
+        .dashboard {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 3rem;
+            box-shadow: 0 8px 32px var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        .dashboard h2 {
+            color: white;
+            margin-bottom: 2rem;
+            text-align: center;
+            font-size: 2rem;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+        }
+
+        .metric {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-label {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
+
+        .metric-change {
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+        }
+
+        .metric-change.positive {
+            color: #2ecc71;
+        }
+
+        .metric-change.negative {
+            color: #e74c3c;
+        }
+
+        /* Progress bars */
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            margin: 1rem 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), #ee5a24);
+            border-radius: 4px;
+            transition: width 2s ease;
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200px 0; }
+            100% { background-position: 200px 0; }
+        }
+
+        /* Advanced Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(45deg, var(--accent), #ee5a24);
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            box-shadow: 0 4px 15px rgba(238, 90, 36, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:hover {
+            background: linear-gradient(45deg, #ee5a24, var(--accent));
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(238, 90, 36, 0.6);
+        }
+
+        /* Terminal Simulator */
+        .terminal {
+            background: #1a1a1a;
+            border-radius: 10px;
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            margin: 2rem 0;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        .terminal-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #333;
+        }
+
+        .terminal-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .terminal-button {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .terminal-button.close { background: #ff5f56; }
+        .terminal-button.minimize { background: #ffbd2e; }
+        .terminal-button.maximize { background: #27ca3f; }
+
+        .terminal-content {
+            color: #00ff00;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .terminal-prompt::before {
+            content: '$ ';
+            color: #00ff00;
+        }
+
+        /* Weather Widget */
+        .weather-widget {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        .weather-icon {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .temperature {
+            font-size: 2rem;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 0.5rem;
+        }
+
+        .weather-desc {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
+
+        /* Status indicators */
+        .status-bar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        .status-item {
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            animation: slideInRight 0.5s ease;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-online { background: #2ecc71; }
+        .status-warning { background: #f39c12; }
+        .status-error { background: #e74c3c; }
+
+        /* Footer */
+        .footer {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            margin-top: 3rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .footer-section h4 {
+            color: white;
+            margin-bottom: 1rem;
+        }
+
+        .footer-section p,
+        .footer-section a {
+            color: var(--text-dim);
+            text-decoration: none;
+            line-height: 1.8;
+        }
+
+        .footer-section a:hover {
+            color: white;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+                flex-direction: column;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: var(--glass);
+                backdrop-filter: blur(10px);
+                border-radius: 15px;
+                margin-top: 1rem;
+                padding: 1rem;
+            }
+
+            .nav-links.active {
+                display: flex;
+            }
+
+            .nav-toggle {
+                display: block;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero-stats {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* Animations */
+        @keyframes slideInDown {
+            from { opacity: 0; transform: translateY(-50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideInUp {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated particles background -->
+    <div class="particles" id="particles"></div>
+
+    <!-- Status indicators -->
+    <div class="status-bar">
+        <div class="status-item">
+            <div class="status-dot status-online"></div>
+            Server Online
+        </div>
+        <div class="status-item">
+            <div class="status-dot status-online"></div>
+            Ubuntu 22.04 LTS
+        </div>
+        <div class="status-item" id="uptime-status">
+            <div class="status-dot status-online"></div>
+            Uptime: <span id="uptime">0d 0h 0m</span>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Navigation -->
+        <nav class="nav">
+            <div class="nav-brand">🖥️ Ubuntu Server</div>
+            <ul class="nav-links" id="nav-links">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#dashboard">Dashboard</a></li>
+                <li><a href="#services">Services</a></li>
+                <li><a href="#logs">Logs</a></li>
+                <li><a href="#settings">Settings</a></li>
+            </ul>
+            <button class="nav-toggle" id="nav-toggle">☰</button>
+        </nav>
+
+        <!-- Hero Section -->
+        <section class="hero" id="home">
+            <h1>Advanced Ubuntu Server</h1>
+            <p class="subtitle">High-performance web hosting with real-time monitoring</p>
+            
+            <div class="hero-stats">
+                <div class="stat">
+                    <span class="stat-number" id="visitors-count">1,247</span>
+                    <span class="stat-label">Total Visitors</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number" id="requests-count">15,832</span>
+                    <span class="stat-label">Requests Served</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">99.9%</span>
+                    <span class="stat-label">Uptime</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Advanced Features Cards -->
+        <section class="cards-grid">
+            <div class="card">
+                <span class="card-icon">🚀</span>
+                <h3>Performance Optimized</h3>
+                <p>Lightning-fast response times with advanced caching, compression, and optimized server configurations for maximum performance.</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 95%"></div>
+                </div>
+                <button class="btn" onclick="showPerformanceDetails()">
+                    📊 View Details
+                </button>
+            </div>
+
+            <div class="card">
+                <span class="card-icon">🔒</span>
+                <h3>Security Hardened</h3>
+                <p>Enterprise-grade security with automated updates, firewall protection, intrusion detection, and SSL encryption.</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 98%"></div>
+                </div>
+                <button class="btn" onclick="showSecurityStatus()">
+                    🛡️ Security Scan
+                </button>
+            </div>
+
+            <div class="card">
+                <span class="card-icon">📊</span>
+                <h3>Real-time Monitoring</h3>
+                <p>Comprehensive system monitoring with live metrics, alerting, and detailed analytics for optimal server management.</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 92%"></div>
+                </div>
+                <button class="btn" onclick="toggleDashboard()">
+                    📈 Open Dashboard
+                </button>
+            </div>
+
+            <div class="card weather-widget">
+                <div class="weather-icon">☀️</div>
+                <div class="temperature" id="temperature">24°C</div>
+                <div class="weather-desc" id="weather-desc">Server Location: Lagos, Nigeria</div>
+                <button class="btn" onclick="updateWeather()">
+                    🌤️ Refresh
+                </button>
+            </div>
+        </section>
+
+        <!-- Interactive Dashboard -->
+        <section class="dashboard" id="dashboard">
+            <h2>📊 System Dashboard</h2>
+            <div class="dashboard-grid">
+                <div class="metric">
+                    <div class="metric-value" id="cpu-usage">23%</div>
+                    <div class="metric-label">CPU Usage</div>
+                    <div class="metric-change positive">↑ 2.3%</div>
+                </div>
+
+                <div class="metric">
+                    <div class="metric-value" id="memory-usage">67%</div>
+                    <div class="metric-label">Memory</div>
+                    <div class="metric-change negative">↓ 1.2%</div>
+                </div>
+
+                <div class="metric">
+                    <div class="metric-value" id="disk-usage">45%</div>
+                    <div class="metric-label">Disk Space</div>
+                    <div class="metric-change positive">↑ 0.5%</div>
+                </div>
+
+                <div class="metric">
+                    <div class="metric-value" id="network-speed">856</div>
+                    <div class="metric-label">Network (MB/s)</div>
+                    <div class="metric-change positive">↑ 12.4%</div>
+                </div>
+
+                <div class="metric">
+                    <div class="metric-value" id="active-connections">142</div>
+                    <div class="metric-label">Active Connections</div>
+                    <div class="metric-change positive">↑ 8</div>
+                </div>
+
+                <div class="metric">
+                    <div class="metric-value" id="load-average">0.73</div>
+                    <div class="metric-label">Load Average</div>
+                    <div class="metric-change negative">↓ 0.05</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Terminal Simulator -->
+        <section class="terminal">
+            <div class="terminal-header">
+                <div class="terminal-buttons">
+                    <div class="terminal-button close"></div>
+                    <div class="terminal-button minimize"></div>
+                    <div class="terminal-button maximize"></div>
+                </div>
+                <span style="color: #666; margin-left: 1rem; font-size: 0.9rem;">ubuntu@server:~</span>
+            </div>
+            <div class="terminal-content" id="terminal-content">
+                <div class="terminal-prompt">systemctl status apache2</div>
+                <div style="color: #00ff00;">● apache2.service - The Apache HTTP Server</div>
+                <div style="color: #666;">   Loaded: loaded (/lib/systemd/system/apache2.service; enabled; vendor preset: enabled)</div>
+                <div style="color: #666;">   Active: <span style="color: #00ff00;">active (running)</span> since Sat 2025-01-11 14:30:22 UTC; 2h 15min ago</div>
+                <div class="terminal-prompt">uptime</div>
+                <div id="terminal-uptime" style="color: #00ff00;"> 14:45:37 up 2:15, 3 users, load average: 0.73, 0.82, 0.91</div>
+                <div class="terminal-prompt">df -h</div>
+                <div style="color: #666;">Filesystem      Size  Used Avail Use% Mounted on</div>
+                <div style="color: #666;">/dev/sda1        20G  9.1G   10G  48% /</div>
+                <div class="terminal-prompt"><span id="terminal-cursor">_</span></div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>🖥️ Server Info</h4>
+                    <p>Ubuntu 22.04.3 LTS</p>
+                    <p>Apache 2.4.52</p>
+                    <p>PHP 8.1.2</p>
+                    <p>MySQL 8.0.34</p>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>📊 Quick Stats</h4>
+                    <p>Uptime: <span id="footer-uptime">99.9%</span></p>
+                    <p>Response: <span id="response-time">45ms</span></p>
+                    <p>Location: Lagos, Nigeria</p>
+                    <p>Last Update: <span id="last-update">Just now</span></p>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>🔗 Resources</h4>
+                    <p><a href="#" onclick="showSystemLogs()">System Logs</a></p>
+                    <p><a href="#" onclick="showNetworkInfo()">Network Info</a></p>
+                    <p><a href="#" onclick="showProcesses()">Active Processes</a></p>
+                    <p><a href="#" onclick="showStorageInfo()">Storage Details</a></p>
+                </div>
+            </div>
+            
+            <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem; margin-top: 2rem;">
+                <p>&copy; 2025 Advanced Ubuntu Server. Powered by open source technology.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Global variables
+        let startTime = Date.now();
+        let systemMetrics = {
+            cpu: 23,
+            memory: 67,
+            disk: 45,
+            network: 856,
+            connections: 142,
+            loadAverage: 0.73
+        };
+
+        // Initialize application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeParticles();
+            startSystemMonitoring();
+            initializeNavigation();
+            updateUptime();
+            blinkCursor();
+            
+            // Update metrics every 3 seconds
+            setInterval(updateSystemMetrics, 3000);
+            setInterval(updateUptime, 1000);
+        });
+
+        // Particle system
+        function initializeParticles() {
+            const particles = document.getElementById('particles');
+            
+            for (let i = 0; i < 50; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 20 + 's';
+                particle.style.animationDuration = (15 + Math.random() * 10) + 's';
+                particles.appendChild(particle);
+            }
+        }
+
+        // Navigation
+        function initializeNavigation() {
+            const navToggle = document.getElementById('nav-toggle');
+            const navLinks = document.getElementById('nav-links');
+            
+            navToggle.addEventListener('click', () => {
+                navLinks.classList.toggle('active');
+            });
+
+            // Smooth scrolling for navigation links
+            document.querySelectorAll('.nav-links a').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const target = document.querySelector(link.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({ behavior: 'smooth' });
+                    }
+                    navLinks.classList.remove('active');
+                });
+            });
+        }
+
+        // System monitoring
+        function startSystemMonitoring() {
+            // Simulate real system metrics
+            updateVisitorCount();
+            updateRequestCount();
+        }
+
+        function updateSystemMetrics() {
+            // Simulate fluctuating metrics
+            systemMetrics.cpu = Math.max(5, Math.min(95, systemMetrics.cpu + (Math.random() - 0.5) * 10));
+            systemMetrics.memory = Math.max(20, Math.min(90, systemMetrics.memory + (Math.random() - 0.5) * 5));
+            systemMetrics.network = Math.max(100, Math.min(1000, systemMetrics.network + (Math.random() - 0.5) * 100));
+            systemMetrics.connections = Math.max(50, Math.min(300, systemMetrics.connections + Math.floor((Math.random() - 0.5) * 20)));
+
+            // Update UI
+            document.getElementById('cpu-usage').textContent = Math.round(systemMetrics.cpu) + '%';
+            document.getElementById('memory-usage').textContent = Math.round(systemMetrics.memory) + '%';
+            document.getElementById('network-speed').textContent = Math.round(systemMetrics.network);
+            document.getElementById('active-connections').textContent = systemMetrics.connections;
+
+            // Update terminal uptime
+            const now = new Date();
+            const uptime = Math.floor((now - startTime) / 1000 / 60);
+            document.getElementById('terminal-uptime').textContent = 
+                ` ${now.toTimeString().split(' ')[0]} up ${Math.floor(uptime/60)}:${uptime%60}, 3 users, load average: ${systemMetrics.loadAverage.toFixed(2)}, ${(systemMetrics.loadAverage + 0.1).toFixed(2)}, ${(systemMetrics.loadAverage + 0.2).toFixed(2)}`;
+        }
+
+        function updateUptime() {
+            const now = Date.now();
+            const uptime = now - startTime;
+            const days = Math.floor(uptime / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((uptime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((uptime % (1000 * 60 * 60)) / (1000 * 60));
+            
+            document.getElementById('uptime').textContent = `${days}d ${hours}h ${minutes}m`;
+            
+            // Update last update time
+            document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
+        }
+
+        function updateVisitorCount() {
+            const counter = document.getElementById('visitors-count');
+            let count = 1247;
+            
+            setInterval(() => {
+                if (Math.random() > 0.7) {
+                    count += Math.floor(Math.random() * 3) + 1;
+                    animateNumber(counter, count);
+                }
+            }, 5000);
+        }
+
+        function updateRequestCount() {
+            const counter = document.getElementById('requests-count');
+            let count = 15832;
+            
+            setInterval(() => {
+                count += Math.floor(Math.random() * 10) + 1;
+                animateNumber(counter, count);
+            }, 3000);
+        }
+
+        function animateNumber(element, target) {
+            const current = parseInt(element.textContent.replace(/,/g, '')) || 0;
+            const increment = Math.ceil((target - current) / 20);
+            
+            const timer = setInterval(() => {
+                const value = parseInt(element.textContent.replace(/,/g, ''));
+                if (value >= target) {
+                    clearInterval(timer);
+                    element.textContent = target.toLocaleString();
+                } else {
+                    element.textContent = (value + increment).toLocaleString();
+                }
+            }, 50);
+        }
+
+        function blinkCursor() {
+            const cursor = document.getElementById('terminal-cursor');
+            setInterval(() => {
+                cursor.style.opacity = cursor.style.opacity === '0' ? '1' : '0';
+            }, 500);
+        }
+
+        // Interactive functions
+        function showPerformanceDetails() {
+            const details = `📊 Performance Metrics:
+
+🚀 Server Response Time: 45ms (Excellent)
+💾 Cache Hit Rate: 95.3%
+🔄 CPU Optimization: Active
+📈 Load Balancing: Enabled
+🗜️ Compression: Gzip + Brotli
+⚡ HTTP/2 Support: Active
+
+Server Configuration:
+• Nginx reverse proxy
+• PHP-FPM optimization
+• Redis caching layer
+• Database query optimization
+• CDN integration ready
+
+Performance Score: A+ (95/100)`;
+
+            alert(details);
+        }
+
+        function showSecurityStatus() {
+            const status = `🛡️ Security Status Report:
+
+✅ Firewall: Active (UFW)
+✅ SSL Certificate: Valid (Let's Encrypt)
+✅ Intrusion Detection: Monitoring
+✅ Auto Updates: Enabled
+✅ Fail2Ban: Active
+✅ SSH Key Authentication: Required
+
+Recent Security Events:
+• 0 Failed login attempts (24h)
+• 0 Blocked IPs (24h)
+• Last security scan: 2 hours ago
+• Vulnerability status: Clean
+
+Security Score: A+ (98/100)
+Next scan: In 4 hours`;
+
+            alert(status);
+        }
+
+        function toggleDashboard() {
+            const dashboard = document.getElementById('dashboard');
+            dashboard.scrollIntoView({ behavior: 'smooth' });
+            
+            // Add a highlight effect
+            dashboard.style.animation = 'none';
+            setTimeout(() => {
+                dashboard.style.animation = 'pulse 2s ease-in-out';
+            }, 100);
+        }
+
+        function updateWeather() {
+            const temps = ['22°C', '24°C', '26°C', '28°C', '25°C'];
+            const conditions = ['Sunny', 'Partly Cloudy', 'Clear Skies', 'Light Breeze'];
+            const icons = ['☀️', '⛅', '🌤️', '🌈'];
+            
+            const temp = temps[Math.floor(Math.random() * temps.length)];
+            const condition = conditions[Math.floor(Math.random() * conditions.length)];
+            const icon = icons[Math.floor(Math.random() * icons.length)];
+            
+            document.getElementById('temperature').textContent = temp;
+            document.getElementById('weather-desc').textContent = `${condition} - Lagos, Nigeria`;
+            document.querySelector('.weather-icon').textContent = icon;
+            
+            // Add refresh animation
+            const widget = document.querySelector('.weather-widget');
+            widget.style.transform = 'scale(1.05)';
+            setTimeout(() => {
+                widget.style.transform = 'scale(1)';
+            }, 200);
+        }
+
+        function showSystemLogs() {
+            const logs = `📋 Recent System Logs:
+
+[2025-01-11 14:45:23] INFO: Apache2 service reloaded successfully
+[2025-01-11 14:42:15] INFO: SSL certificate renewed automatically
+[2025-01-11 14:40:08] INFO: System updates installed (security patches)
+[2025-01-11 14:38:45] INFO: Backup completed successfully
+[2025-01-11 14:35:12] INFO: Database optimization completed
+[2025-01-11 14:30:00] INFO: Cron job executed: log rotation
+[2025-01-11 14:28:33] INFO: New visitor from Nigeria (IP: 197.xxx.xxx.xxx)
+[2025-01-11 14:25:17] INFO: Cache cleared and rebuilt
+[2025-01-11 14:22:45] INFO: Monitoring service heartbeat OK
+[2025-01-11 14:20:00] INFO: System health check passed
+
+Status: All systems operational ✅`;
+
+            alert(logs);
+        }
+
+        function showNetworkInfo() {
+            const networkInfo = `🌐 Network Configuration:
+
+📍 Server Location: Lagos, Nigeria
+🌍 Public IP: 197.210.xxx.xxx
+🏠 Private IP: 192.168.1.100
+📊 Network Speed: 1Gbps up/down
+🔗 DNS Servers: 1.1.1.1, 8.8.8.8
+
+Active Connections:
+• HTTP Connections: 87
+• HTTPS Connections: 55
+• WebSocket Connections: 12
+• Total Bandwidth: 856 MB/s
+
+Network Interfaces:
+• eth0: UP (1000baseT/Full)
+• lo: UP (Loopback)
+
+Firewall Rules: 23 active
+Port Status: 80, 443 (Open), 22 (Filtered)`;
+
+            alert(networkInfo);
+        }
+
+        function showProcesses() {
+            const processes = `⚙️ Top System Processes:
+
+PID   CPU%  MEM%  COMMAND
+1234  12.3  8.7   apache2
+2345  8.9   15.2  mysql
+3456  5.4   4.1   php-fpm
+4567  3.2   2.8   nginx
+5678  2.1   1.9   systemd
+6789  1.8   3.4   redis-server
+7890  1.2   1.1   sshd
+8901  0.8   0.6   cron
+9012  0.5   0.4   ufw
+0123  0.3   0.2   logrotate
+
+Total Processes: 156
+Running: 142
+Sleeping: 14
+Zombie: 0
+
+Load Average: 0.73 (1min), 0.82 (5min), 0.91 (15min)`;
+
+            alert(processes);
+        }
+
+        function showStorageInfo() {
+            const storageInfo = `💾 Storage Information:
+
+Disk Usage Overview:
+/dev/sda1: 20GB total, 9.1GB used (45%)
+└── / (root): 8.2GB
+└── /var: 2.1GB (logs, cache)
+└── /home: 0.8GB
+
+/dev/sda2: 100GB total, 23GB used (23%)
+└── /var/www: 15GB (websites)
+└── /var/lib/mysql: 8GB (database)
+
+Storage Health:
+• Disk Status: Healthy ✅
+• SMART Status: Passed
+• Bad Sectors: 0
+• Temperature: 38°C (Normal)
+• Last Check: 6 hours ago
+
+Backup Status:
+• Last Backup: 2 hours ago
+• Backup Size: 12.3GB
+• Backup Location: /backup/
+• Auto-backup: Enabled (Daily)`;
+
+            alert(storageInfo);
+        }
+
+        // Advanced interactions
+        document.addEventListener('mousemove', (e) => {
+            const cards = document.querySelectorAll('.card');
+            cards.forEach(card => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                if (x >= 0 && x <= rect.width && y >= 0 && y <= rect.height) {
+                    const centerX = rect.width / 2;
+                    const centerY = rect.height / 2;
+                    const rotateX = (y - centerY) / 10;
+                    const rotateY = (centerX - x) / 10;
+                    
+                    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-10px) scale(1.02)`;
+                } else {
+                    card.style.transform = '';
+                }
+            });
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey) {
+                switch(e.key) {
+                    case '1':
+                        e.preventDefault();
+                        document.getElementById('home').scrollIntoView({ behavior: 'smooth' });
+                        break;
+                    case '2':
+                        e.preventDefault();
+                        document.getElementById('dashboard').scrollIntoView({ behavior: 'smooth' });
+                        break;
+                    case 'r':
+                        e.preventDefault();
+                        location.reload();
+                        break;
+                }
+            }
+        });
+
+        // Performance monitoring
+        if ('performance' in window) {
+            window.addEventListener('load', () => {
+                setTimeout(() => {
+                    const perfData = performance.timing;
+                    const loadTime = perfData.loadEventEnd - perfData.navigationStart;
+                    if (loadTime > 0) {
+                        document.getElementById('response-time').textContent = `${loadTime}ms`;
+                    }
+                }, 0);
+            });
+        }
+
+        // Service worker registration for offline capabilities
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(() => console.log('Service Worker registered'))
+                    .catch(err => console.log('Service Worker registration failed'));
+            });
+        }
+
+    </script>
+</body>
+</html>
+            
